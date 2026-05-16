@@ -12,7 +12,6 @@ import { getPendingCount, clearPendingEntries } from '@/utils/offlineSync'
 function SettingsPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
   const [clearingData, setClearingData] = useState(false)
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
@@ -27,7 +26,6 @@ function SettingsPage() {
         return
       }
       setUser(user)
-      setIsAdmin(user.email === 'amusman9705@gmail.com')
       setLoading(false)
       
       // Get pending count
@@ -75,8 +73,8 @@ function SettingsPage() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
-    { label: 'Tracker', href: '/tracker-new' },
-    ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
+    // { label: 'Tracker', href: '/tracker-new' },
+    // ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
     { label: 'Sign Out', onClick: handleSignOut }

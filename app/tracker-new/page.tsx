@@ -27,7 +27,6 @@ const monthCache: { [key: string]: { [date: string]: number } } = {}
 function TrackerNewPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -125,7 +124,6 @@ function TrackerNewPage() {
         return
       }
       setUser(user)
-      setIsAdmin(user.email === 'amusman9705@gmail.com')
       setLoading(false)
     }
     init()
@@ -246,8 +244,8 @@ function TrackerNewPage() {
         items={[
           { label: 'Dashboard', href: '/' },
           { label: 'Statistics', href: '/stats' },
-          { label: 'Tracker', href: '/tracker-new' },
-          ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
+          // { label: 'Tracker', href: '/tracker-new' },
+          // ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
           { label: 'Settings', href: '/settings' },
           { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
           { label: 'Sign Out', onClick: () => router.push('/login') }

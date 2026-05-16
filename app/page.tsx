@@ -46,6 +46,20 @@ interface UserPredefinedTagRow {
   tag: string
 }
 
+const formatLocalDate = (date: Date): string => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+const getEmptyReflection = (): DailyReflection => ({
+  outputTitle: null,
+  outputContent: null,
+  learningTitle: null,
+  learningContent: null
+})
+
 // Cache to persist month data
 const monthCache: { [key: string]: { [date: string]: number } } = {}
 
@@ -63,6 +77,7 @@ function Home() {
     learningTitle: null,
     learningContent: null
   })
+  const [localReflectionsByDate, setLocalReflectionsByDate] = useState<Record<string, DailyReflection>>({})
   const [userPredefinedTags, setUserPredefinedTags] = useState<string[]>([])
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
@@ -291,21 +306,6 @@ function Home() {
     }
   }, [loading, user, isOffline, router])
 
-  // Helper to format date in local timezone
-  const formatLocalDate = (date: Date): string => {
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    return `${y}-${m}-${d}`
-  }
-
-  const getEmptyReflection = (): DailyReflection => ({
-    outputTitle: null,
-    outputContent: null,
-    learningTitle: null,
-    learningContent: null
-  })
-
   const loadDayEntries = async (date: Date) => {
     if (!user) return
     
@@ -389,15 +389,17 @@ function Home() {
     }
   }
 
-  const loadDayReflection = async (date: Date) => {
+  const loadDayReflection = useCallback(async (date: Date) => {
     if (!user) return
 
+    const dateStr = formatLocalDate(date)
+    const localFallback = localReflectionsByDate[dateStr]
+
     if (!isOnline()) {
-      setDayReflection(getEmptyReflection())
+      setDayReflection(localFallback || getEmptyReflection())
       return
     }
 
-    const dateStr = formatLocalDate(date)
     const { data, error } = await supabase
       .from('daily_reflections')
       .select('output_title, output_content, learning_title, learning_content')
@@ -406,17 +408,20 @@ function Home() {
       .maybeSingle()
 
     if (error || !data) {
-      setDayReflection(getEmptyReflection())
+      setDayReflection(localFallback || getEmptyReflection())
       return
     }
 
-    setDayReflection({
+    const nextReflection: DailyReflection = {
       outputTitle: data.output_title,
       outputContent: data.output_content,
       learningTitle: data.learning_title,
       learningContent: data.learning_content
-    })
-  }
+    }
+
+    setDayReflection(nextReflection)
+    setLocalReflectionsByDate((prev) => ({ ...prev, [dateStr]: nextReflection }))
+  }, [user, supabase, localReflectionsByDate])
 
   const handleDateClick = async (date: Date) => {
     setSelectedDate(date)
@@ -497,7 +502,7 @@ function Home() {
     learningTitle?: string | null
     learningContent?: string | null
   }) => {
-    if (!selectedDate || !user || !isOnline()) return
+    if (!selectedDate || !user) return
 
     const dateStr = formatLocalDate(selectedDate)
     const nextReflection: DailyReflection = {
@@ -506,6 +511,13 @@ function Home() {
       learningTitle: payload.learningTitle !== undefined ? payload.learningTitle : dayReflection.learningTitle,
       learningContent:
         payload.learningContent !== undefined ? payload.learningContent : dayReflection.learningContent
+    }
+
+    setDayReflection(nextReflection)
+    setLocalReflectionsByDate((prev) => ({ ...prev, [dateStr]: nextReflection }))
+
+    if (!isOnline()) {
+      return
     }
 
     const { error } = await supabase.from('daily_reflections').upsert(
@@ -522,9 +534,12 @@ function Home() {
       }
     )
 
-    if (!error) {
-      setDayReflection(nextReflection)
+    if (error) {
+      console.error('Error saving daily reflection:', error)
+      return
     }
+
+    await loadDayReflection(selectedDate)
   }
 
   const handleAddUserPredefinedTag = async (tag: string) => {
@@ -673,8 +688,8 @@ function Home() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
-    { label: 'Tracker', href: '/tracker-new' },
-    ...(user?.email === 'amusman9705@gmail.com' ? [{ label: 'Attendance', href: '/attendance' }] : []),
+    // { label: 'Tracker', href: '/tracker-new' },
+    // ...(user?.email === 'amusman9705@gmail.com' ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
     { label: 'Sign Out', onClick: handleSignOut }

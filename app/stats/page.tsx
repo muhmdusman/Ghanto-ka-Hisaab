@@ -46,7 +46,6 @@ function StatsPage() {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [rawEntries, setRawEntries] = useState<HourEntry[]>([])
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -161,9 +160,6 @@ function StatsPage() {
       setTagStats([])
     }
     
-    // Load tracker stats
-    await loadTrackerStats(uid, period)
-    
     setIsRefreshing(false)
   }, [supabase, getDateRange])
 
@@ -231,8 +227,6 @@ function StatsPage() {
         return
       }
       setUserId(user.id)
-      setIsAdmin(user.email === 'amusman9705@gmail.com')
-      
       const today = formatLocalDate(new Date())
       setCustomStartDate(today)
       setCustomEndDate(today)
@@ -274,8 +268,8 @@ function StatsPage() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
-    { label: 'Tracker', href: '/tracker-new' },
-    ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
+    // { label: 'Tracker', href: '/tracker-new' },
+    // ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
     { label: 'Sign Out', onClick: handleSignOut }
@@ -337,7 +331,7 @@ function StatsPage() {
             >
               Hours Tracking
             </button>
-            <button
+            {/* <button
               onClick={() => setViewMode('tracker')}
               className={`flex-1 px-6 py-3 rounded-lg border-2 border-zinc-900 font-bold transition-all shadow-[2px_2px_0_0_#323232] ${
                 viewMode === 'tracker'
@@ -346,7 +340,7 @@ function StatsPage() {
               }`}
             >
               Tracker Stats
-            </button>
+            </button> */}
           </div>
 
           {viewMode === 'hours' ? (
@@ -467,8 +461,8 @@ function StatsPage() {
             )}
           </div>
 
-          {/* Tracker Stats Section */}
-          {trackerStats.length > 0 && (
+          {/* Tracker Stats Section (temporarily hidden) */}
+          {/* {trackerStats.length > 0 && (
             <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] mb-8">
               <h2 className="text-xl font-bold text-zinc-900 mb-4">
                 Daily Tracker Stats - {periodLabels[timePeriod]}
@@ -500,7 +494,7 @@ function StatsPage() {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="p-6 rounded-lg border-2 border-zinc-900 bg-zinc-50 shadow-[4px_4px_0_0_#323232]">
             <h2 className="text-xl font-bold text-zinc-900 mb-4">

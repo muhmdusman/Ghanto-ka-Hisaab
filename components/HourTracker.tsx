@@ -31,6 +31,7 @@ type ReflectionKind = 'output' | 'learning'
 
 const PREDEFINED_TAGS = ['Sleep', 'Daily Task', 'Study', 'Phone Scrolling', 'With Friends', 'Fun', 'Work']
 const DAY_TITLE_TAGS = ['Happy', 'Average', 'Sad', 'Best', 'Focused', 'Grateful', 'Challenging', 'Productive']
+const LEARNING_FOCUS_TAGS = ['Learning', 'Advice', 'Lesson', 'Improvement', 'Mindset', 'Reminder']
 
 function normalizeTag(tag: string) {
   return tag.trim().replace(/\s+/g, ' ')
@@ -85,8 +86,10 @@ export default function HourTracker({
   const [deletingTag, setDeletingTag] = useState<string | null>(null)
   const [isManagingSavedTags, setIsManagingSavedTags] = useState(false)
   const [activeReflectionModal, setActiveReflectionModal] = useState<ReflectionKind | null>(null)
-  const [reflectionTitle, setReflectionTitle] = useState('')
-  const [customReflectionTitle, setCustomReflectionTitle] = useState('')
+  const [outputTitle, setOutputTitle] = useState('')
+  const [customOutputTitle, setCustomOutputTitle] = useState('')
+  const [learningFocus, setLearningFocus] = useState('')
+  const [customLearningFocus, setCustomLearningFocus] = useState('')
   const [reflectionSaving, setReflectionSaving] = useState(false)
   const [reflectionQuoteIndex, setReflectionQuoteIndex] = useState(0)
   const [planningQuoteIndex, setPlanningQuoteIndex] = useState(0)
@@ -220,17 +223,19 @@ export default function HourTracker({
     setReflectionQuoteIndex(Math.floor(Math.random() * REFLECTION_QUOTES.length))
 
     if (kind === 'output') {
-      setReflectionTitle(reflection.outputTitle || '')
-      setCustomReflectionTitle(
+      setOutputTitle(reflection.outputTitle || '')
+      setCustomOutputTitle(
         reflection.outputTitle && !DAY_TITLE_TAGS.includes(reflection.outputTitle) ? reflection.outputTitle : ''
       )
       if (reflectionEditorRef.current) {
         reflectionEditorRef.current.innerHTML = toEditorHtml(reflection.outputContent)
       }
     } else {
-      setReflectionTitle(reflection.learningTitle || '')
-      setCustomReflectionTitle(
-        reflection.learningTitle && !DAY_TITLE_TAGS.includes(reflection.learningTitle) ? reflection.learningTitle : ''
+      setLearningFocus(reflection.learningTitle || '')
+      setCustomLearningFocus(
+        reflection.learningTitle && !LEARNING_FOCUS_TAGS.includes(reflection.learningTitle)
+          ? reflection.learningTitle
+          : ''
       )
       if (reflectionEditorRef.current) {
         reflectionEditorRef.current.innerHTML = toEditorHtml(reflection.learningContent)
@@ -260,7 +265,8 @@ export default function HourTracker({
   const handleSaveReflection = async () => {
     if (!activeReflectionModal || !reflectionEditorRef.current) return
 
-    const finalTitle = normalizeTag(customReflectionTitle || reflectionTitle)
+    const finalOutputTitle = normalizeTag(customOutputTitle || outputTitle)
+    const finalLearningFocus = normalizeTag(customLearningFocus || learningFocus)
     const contentHtml = reflectionEditorRef.current.innerHTML
     const plainText = stripHtml(contentHtml)
 
@@ -268,18 +274,20 @@ export default function HourTracker({
     try {
       if (activeReflectionModal === 'output') {
         await onSaveReflection({
-          outputTitle: finalTitle || null,
+          outputTitle: finalOutputTitle || null,
           outputContent: plainText ? contentHtml : null
         })
       } else {
         await onSaveReflection({
-          learningTitle: finalTitle || null,
+          learningTitle: finalLearningFocus || null,
           learningContent: plainText ? contentHtml : null
         })
       }
       setActiveReflectionModal(null)
-      setReflectionTitle('')
-      setCustomReflectionTitle('')
+      setOutputTitle('')
+      setCustomOutputTitle('')
+      setLearningFocus('')
+      setCustomLearningFocus('')
     } finally {
       setReflectionSaving(false)
     }
@@ -298,6 +306,9 @@ export default function HourTracker({
   const selectedReflectionQuote = REFLECTION_QUOTES[reflectionQuoteIndex]
   const existingOutput = stripHtml(reflection.outputContent || '')
   const existingLearning = stripHtml(reflection.learningContent || '')
+  const shortDateLabel = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const outputButtonLabel = existingOutput ? `See output of ${shortDateLabel}` : 'Add Output of Today'
+  const learningButtonLabel = existingLearning ? `See learnings of ${shortDateLabel}` : 'Add Learning / Advice'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -360,13 +371,13 @@ export default function HourTracker({
                 onClick={() => openReflectionModal('output')}
                 className="w-full rounded-lg border-2 border-zinc-900 bg-zinc-900 px-3 py-2 text-sm font-semibold text-white hover:bg-zinc-800"
               >
-                Add Output of Today
+                {outputButtonLabel}
               </button>
               <button
                 onClick={() => openReflectionModal('learning')}
                 className="w-full rounded-lg border-2 border-zinc-900 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
               >
-                Add Learning / Advice
+                {learningButtonLabel}
               </button>
               {(existingOutput || existingLearning) && (
                 <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-3 text-xs text-zinc-700 space-y-2">
@@ -562,35 +573,71 @@ export default function HourTracker({
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <p className="mb-2 text-sm font-semibold text-zinc-700">Give this day a title</p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {DAY_TITLE_TAGS.map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => {
-                        setReflectionTitle(tag)
-                        setCustomReflectionTitle('')
+                {activeReflectionModal === 'output' ? (
+                  <>
+                    <p className="mb-2 text-sm font-semibold text-zinc-700">Give this day a title</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {DAY_TITLE_TAGS.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => {
+                            setOutputTitle(tag)
+                            setCustomOutputTitle('')
+                          }}
+                          className={`rounded-full border-2 border-zinc-900 px-3 py-1 text-xs font-semibold ${
+                            outputTitle === tag ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 hover:bg-zinc-100'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={customOutputTitle}
+                      onChange={(e) => {
+                        setCustomOutputTitle(e.target.value)
+                        if (e.target.value.trim()) {
+                          setOutputTitle('')
+                        }
                       }}
-                      className={`rounded-full border-2 border-zinc-900 px-3 py-1 text-xs font-semibold ${
-                        reflectionTitle === tag ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 hover:bg-zinc-100'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  value={customReflectionTitle}
-                  onChange={(e) => {
-                    setCustomReflectionTitle(e.target.value)
-                    if (e.target.value.trim()) {
-                      setReflectionTitle('')
-                    }
-                  }}
-                  placeholder="Or write your own title"
-                  className="w-full rounded-lg border-2 border-zinc-900 bg-white px-3 py-2 text-sm font-medium text-zinc-900 outline-none"
-                />
+                      placeholder="Or write your own title"
+                      className="w-full rounded-lg border-2 border-zinc-900 bg-white px-3 py-2 text-sm font-medium text-zinc-900 outline-none"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-2 text-sm font-semibold text-zinc-700">Learning / Advice Focus</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {LEARNING_FOCUS_TAGS.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => {
+                            setLearningFocus(tag)
+                            setCustomLearningFocus('')
+                          }}
+                          className={`rounded-full border-2 border-zinc-900 px-3 py-1 text-xs font-semibold ${
+                            learningFocus === tag ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 hover:bg-zinc-100'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={customLearningFocus}
+                      onChange={(e) => {
+                        setCustomLearningFocus(e.target.value)
+                        if (e.target.value.trim()) {
+                          setLearningFocus('')
+                        }
+                      }}
+                      placeholder="Write focus (e.g., time management advice)"
+                      className="w-full rounded-lg border-2 border-zinc-900 bg-white px-3 py-2 text-sm font-medium text-zinc-900 outline-none"
+                    />
+                  </>
+                )}
               </div>
 
               <div>
