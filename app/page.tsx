@@ -34,6 +34,13 @@ interface HourEntry {
   details?: string
 }
 
+interface DailyReflection {
+  outputTitle: string | null
+  outputContent: string | null
+  learningTitle: string | null
+  learningContent: string | null
+}
+
 interface UserPredefinedTagRow {
   user_id: string
   tag: string
@@ -50,6 +57,12 @@ function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [monthEntries, setMonthEntries] = useState<{ [date: string]: number }>({})
   const [dayEntries, setDayEntries] = useState<{ [hour: number]: HourEntry }>({})
+  const [dayReflection, setDayReflection] = useState<DailyReflection>({
+    outputTitle: null,
+    outputContent: null,
+    learningTitle: null,
+    learningContent: null
+  })
   const [userPredefinedTags, setUserPredefinedTags] = useState<string[]>([])
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
@@ -286,6 +299,13 @@ function Home() {
     return `${y}-${m}-${d}`
   }
 
+  const getEmptyReflection = (): DailyReflection => ({
+    outputTitle: null,
+    outputContent: null,
+    learningTitle: null,
+    learningContent: null
+  })
+
   const loadDayEntries = async (date: Date) => {
     if (!user) return
     
@@ -369,9 +389,38 @@ function Home() {
     }
   }
 
+  const loadDayReflection = async (date: Date) => {
+    if (!user) return
+
+    if (!isOnline()) {
+      setDayReflection(getEmptyReflection())
+      return
+    }
+
+    const dateStr = formatLocalDate(date)
+    const { data, error } = await supabase
+      .from('daily_reflections')
+      .select('output_title, output_content, learning_title, learning_content')
+      .eq('user_id', user.id)
+      .eq('date', dateStr)
+      .maybeSingle()
+
+    if (error || !data) {
+      setDayReflection(getEmptyReflection())
+      return
+    }
+
+    setDayReflection({
+      outputTitle: data.output_title,
+      outputContent: data.output_content,
+      learningTitle: data.learning_title,
+      learningContent: data.learning_content
+    })
+  }
+
   const handleDateClick = async (date: Date) => {
     setSelectedDate(date)
-    await loadDayEntries(date)
+    await Promise.all([loadDayEntries(date), loadDayReflection(date)])
   }
 
   const handleSaveHour = async (hour: number, tags: string[], details?: string) => {
@@ -439,6 +488,42 @@ function Home() {
       delete monthCache[cacheKey]
       
       await Promise.all([loadDayEntries(selectedDate), loadMonthEntries()])
+    }
+  }
+
+  const handleSaveReflection = async (payload: {
+    outputTitle?: string | null
+    outputContent?: string | null
+    learningTitle?: string | null
+    learningContent?: string | null
+  }) => {
+    if (!selectedDate || !user || !isOnline()) return
+
+    const dateStr = formatLocalDate(selectedDate)
+    const nextReflection: DailyReflection = {
+      outputTitle: payload.outputTitle !== undefined ? payload.outputTitle : dayReflection.outputTitle,
+      outputContent: payload.outputContent !== undefined ? payload.outputContent : dayReflection.outputContent,
+      learningTitle: payload.learningTitle !== undefined ? payload.learningTitle : dayReflection.learningTitle,
+      learningContent:
+        payload.learningContent !== undefined ? payload.learningContent : dayReflection.learningContent
+    }
+
+    const { error } = await supabase.from('daily_reflections').upsert(
+      {
+        user_id: user.id,
+        date: dateStr,
+        output_title: nextReflection.outputTitle,
+        output_content: nextReflection.outputContent,
+        learning_title: nextReflection.learningTitle,
+        learning_content: nextReflection.learningContent
+      },
+      {
+        onConflict: 'user_id,date'
+      }
+    )
+
+    if (!error) {
+      setDayReflection(nextReflection)
     }
   }
 
@@ -558,8 +643,9 @@ function Home() {
     loadUserPredefinedTags()
     if (selectedDate) {
       loadDayEntries(selectedDate)
+      loadDayReflection(selectedDate)
     }
-  }, [loadMonthEntries, loadUserPredefinedTags, selectedDate, loadDayEntries])
+  }, [loadMonthEntries, loadUserPredefinedTags, selectedDate, loadDayEntries, loadDayReflection])
 
   if (loading) {
     return (
@@ -715,7 +801,10 @@ function Home() {
         <HourTracker
           date={selectedDate}
           entries={dayEntries}
+          reflection={dayReflection}
           onSave={handleSaveHour}
+          onSaveReflection={handleSaveReflection}
+          onOpenDate={handleDateClick}
           userPredefinedTags={userPredefinedTags}
           onAddUserPredefinedTag={handleAddUserPredefinedTag}
           onDeleteUserPredefinedTag={handleDeleteUserPredefinedTag}

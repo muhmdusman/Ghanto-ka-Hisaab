@@ -27,9 +27,27 @@ CREATE TABLE IF NOT EXISTS user_predefined_tags (
 -- Create indexes for user predefined tags
 CREATE INDEX IF NOT EXISTS idx_user_predefined_tags_user_id ON user_predefined_tags(user_id);
 
+-- Create table for storing daily output and learning reflections
+CREATE TABLE IF NOT EXISTS daily_reflections (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL,
+  output_title TEXT,
+  output_content TEXT,
+  learning_title TEXT,
+  learning_content TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(user_id, date)
+);
+
+-- Create indexes for daily reflections
+CREATE INDEX IF NOT EXISTS idx_daily_reflections_user_date ON daily_reflections(user_id, date);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE hour_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_predefined_tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_reflections ENABLE ROW LEVEL SECURITY;
 
 -- Create policy: Users can only see their own entries
 CREATE POLICY "Users can view own hour entries" 
@@ -68,6 +86,23 @@ CREATE POLICY "Users can delete own predefined tags"
   ON user_predefined_tags FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Create policies for daily reflections
+CREATE POLICY "Users can view own daily reflections"
+  ON daily_reflections FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own daily reflections"
+  ON daily_reflections FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own daily reflections"
+  ON daily_reflections FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own daily reflections"
+  ON daily_reflections FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -81,4 +116,9 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_hour_entries_updated_at 
   BEFORE UPDATE ON hour_entries 
   FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_daily_reflections_updated_at
+  BEFORE UPDATE ON daily_reflections
+  FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
