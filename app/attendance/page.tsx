@@ -129,13 +129,14 @@ function AttendancePage() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
+    { label: 'Tracker', href: '/tracker' },
     { label: 'Attendance', href: '/attendance' },
     { label: 'Settings', href: '/settings' },
     { label: 'Sign Out', onClick: handleSignOut }
   ]
 
   return (
-    <div className="min-h-screen bg-[var(--app-surface)]">
+    <div className="min-h-screen bg-white">
       <StaggeredMenu items={menuItems} position="left" />
       
       <main className="p-4 pt-20 md:p-8 md:pt-20">

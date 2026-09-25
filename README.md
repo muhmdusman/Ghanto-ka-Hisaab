@@ -1,7 +1,7 @@
-# Ghanto ka Hisaab
+# The Timely
 
 <p align="center">
-  <img src="public/logo.png" alt="Ghanto ka Hisaab logo" width="96" height="96" />
+  <img src="public/android-chrome-192x192.png" alt="The Timely app icon" width="96" height="96" />
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 It is easy to lose time without noticing it. Sometimes an hour disappears while sitting idle, scrolling, or hanging out with friends longer than planned. By the end of the day, it can be hard to remember where the time went.
 
-Ghanto ka Hisaab solves that by making each hour visible. You log the day hour by hour, attach predefined or custom tags, add notes when needed, and then review the statistics to see where your time is productive, necessary, idle, or wasted.
+The Timely solves that by making each hour visible. You log the day hour by hour, attach predefined or custom tags, add notes when needed, and then review the statistics to see where your time is productive, necessary, idle, or wasted.
 
 The goal is not guilt. The goal is awareness: track your hours, understand your patterns, and get more out of your time.
 

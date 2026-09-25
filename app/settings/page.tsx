@@ -75,6 +75,7 @@ function SettingsPage() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
+    { label: 'Tracker', href: '/tracker-new' },
     ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
@@ -82,7 +83,7 @@ function SettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[var(--app-surface)]">
+    <div className="min-h-screen bg-white">
       <StaggeredMenu items={menuItems} position="left" />
       
       <main className="p-4 pt-20 md:p-8 md:pt-20">
@@ -154,7 +155,7 @@ function SettingsPage() {
             
             <div className="space-y-2">
               <p className="text-sm text-zinc-600">
-                <span className="font-semibold">Ghanto ka Hisaab</span> - Track Your Hours
+                <span className="font-semibold">The Timely</span> - Track Your Time
               </p>
               <p className="text-sm text-zinc-600">
                 Version 1.0.0
@@ -164,7 +165,7 @@ function SettingsPage() {
               </p>
               
               <a
-                href="https://github.com/usman2789/Ghanto-ka-Hisaab"
+                href="https://github.com/usman2789/The-Timely"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-900 hover:text-zinc-700 mt-4"

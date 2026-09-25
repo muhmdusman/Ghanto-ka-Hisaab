@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { gsap } from 'gsap'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -23,9 +22,9 @@ interface StaggeredMenuProps {
 export default function StaggeredMenu({
   items,
   position = 'right',
-  colors = ['#f8fafc', '#e7edf3', '#111827'],
-  menuButtonColor = '#111827',
-  accentColor = '#0f766e'
+  colors = ['#18181b', '#27272a', '#3f3f46'],
+  menuButtonColor = '#18181b',
+  accentColor = '#18181b'
 }: StaggeredMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -35,23 +34,26 @@ export default function StaggeredMenu({
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
 
+  // Handle menu animations
   useEffect(() => {
     if (isOpen) {
+      // Animate overlays in with stagger
       gsap.to(overlayRefs.current, {
         x: 0,
-        duration: 0.34,
-        stagger: 0.045,
+        duration: 0.3,
+        stagger: 0.05,
         ease: 'power3.out'
       })
-
+      // Animate menu items
       if (menuItemsRef.current) {
         gsap.fromTo(
           menuItemsRef.current.children,
-          { y: 24, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.26, stagger: 0.045, delay: 0.12, ease: 'power2.out' }
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.24, stagger: 0.05, delay: 0.12, ease: 'power2.out' }
         )
       }
     } else {
+      // Animate overlays out
       gsap.to(overlayRefs.current, {
         x: position === 'right' ? '100%' : '-100%',
         duration: 0.24,
@@ -61,6 +63,7 @@ export default function StaggeredMenu({
     }
   }, [isOpen, position])
 
+  // Close menu only when pathname actually changes (not on initial mount)
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       setIsOpen(false)
@@ -68,11 +71,12 @@ export default function StaggeredMenu({
     }
   }, [pathname])
 
+  // Close on click outside (but not on the button)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node
       if (
-        menuRef.current &&
+        menuRef.current && 
         !menuRef.current.contains(target) &&
         buttonRef.current &&
         !buttonRef.current.contains(target)
@@ -82,14 +86,19 @@ export default function StaggeredMenu({
     }
 
     if (isOpen) {
-      const timer = setTimeout(() => document.addEventListener('mousedown', handleClickOutside), 100)
+      // Use setTimeout to avoid immediate trigger
+      const timer = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside)
+      }, 100)
       return () => {
         clearTimeout(timer)
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
-
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [isOpen])
 
   const toggleMenu = useCallback(() => {
@@ -98,38 +107,39 @@ export default function StaggeredMenu({
 
   return (
     <>
+      {/* Menu Button */}
       <button
         ref={buttonRef}
         onClick={toggleMenu}
-        className="fixed left-4 top-4 z-[60] inline-flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white/90 px-3 py-2 shadow-[0_14px_40px_rgba(24,24,27,0.14)] backdrop-blur transition hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white active:translate-y-0"
-        aria-label={isOpen ? 'Close menu' : 'Open menu'}
-        aria-expanded={isOpen}
+        className="absolute top-4 left-4 z-[60] p-3 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] hover:shadow-[2px_2px_0_0_#323232] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+        aria-label="Toggle menu"
       >
-        <span className="grid size-9 place-items-center overflow-hidden rounded-xl bg-zinc-950">
-          <Image src="/logo.png" alt="" width={28} height={28} className="size-7 object-contain" priority />
-        </span>
-        <span className="hidden text-sm font-black tracking-tight text-zinc-950 sm:inline">Menu</span>
-        <span className="flex h-5 w-5 flex-col justify-center gap-1.5" aria-hidden="true">
+        <div className="w-6 h-5 flex flex-col justify-between">
           <span
-            className={`block h-0.5 w-5 rounded-full transition-all duration-300 ${isOpen ? 'translate-y-2 rotate-45' : ''}`}
-            style={{ backgroundColor: menuButtonColor }}
+            className={`block h-0.5 w-full bg-zinc-900 transition-all duration-300 origin-center ${
+              isOpen ? 'rotate-45 translate-y-[9px]' : ''
+            }`}
           />
           <span
-            className={`block h-0.5 w-5 rounded-full transition-all duration-300 ${isOpen ? 'opacity-0' : ''}`}
-            style={{ backgroundColor: menuButtonColor }}
+            className={`block h-0.5 w-full bg-zinc-900 transition-all duration-300 ${
+              isOpen ? 'opacity-0 scale-0' : ''
+            }`}
           />
           <span
-            className={`block h-0.5 w-5 rounded-full transition-all duration-300 ${isOpen ? '-translate-y-2 -rotate-45' : ''}`}
-            style={{ backgroundColor: menuButtonColor }}
+            className={`block h-0.5 w-full bg-zinc-900 transition-all duration-300 origin-center ${
+              isOpen ? '-rotate-45 -translate-y-[9px]' : ''
+            }`}
           />
-        </span>
+        </div>
       </button>
 
-      <div
-        ref={menuRef}
+      {/* Menu Panel */}
+      <div 
+        ref={menuRef} 
         className={`fixed inset-0 z-50 ${isOpen ? 'pointer-events-auto visible' : 'pointer-events-none invisible'}`}
         style={{ display: isOpen ? 'block' : 'none' }}
       >
+        {/* Staggered Overlay Layers */}
         {colors.map((color, index) => (
           <div
             key={index}
@@ -137,63 +147,57 @@ export default function StaggeredMenu({
               if (el) overlayRefs.current[index] = el
             }}
             className={`absolute inset-0 ${position === 'right' ? 'translate-x-full' : '-translate-x-full'}`}
-            style={{ backgroundColor: color, zIndex: 50 + index, willChange: 'transform' }}
+            style={{
+              backgroundColor: color,
+              zIndex: 50 + index,
+              willChange: 'transform'
+            }}
           />
         ))}
 
+        {/* Menu Content */}
         <div
-          className={`absolute inset-0 flex flex-col px-6 pb-8 pt-28 sm:px-10 md:px-16 ${
+          className={`absolute inset-0 flex flex-col justify-center px-8 md:px-16 ${
             isOpen ? 'pointer-events-auto visible' : 'pointer-events-none invisible'
           }`}
           style={{ zIndex: 50 + colors.length }}
         >
-          <div className="mb-10 flex items-center gap-4">
-            <div className="grid size-14 place-items-center overflow-hidden rounded-2xl bg-white shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
-              <Image src="/logo.png" alt="Ghanto ka Hisaab" width={44} height={44} className="size-11 object-contain" priority />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-400">Ghanto ka Hisaab</p>
-              <p className="mt-1 text-sm font-medium text-zinc-300">Choose a workspace</p>
-            </div>
-          </div>
-
-          <nav ref={menuItemsRef} className="space-y-1">
+          <nav ref={menuItemsRef} className="space-y-2">
             {items.map((item, index) => {
               const isActive = item.href === pathname
-              const row = (
-                <div className="group flex items-center gap-4 rounded-2xl px-1 py-2 transition hover:bg-white/5 sm:gap-5 sm:px-3">
-                  <span className="w-8 font-mono text-xs font-bold text-zinc-500 sm:w-10">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span
-                    className={`text-3xl font-black tracking-tight transition-colors duration-200 sm:text-5xl ${
-                      isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                  {isActive && (
-                    <span
-                      className="ml-auto hidden h-2.5 w-2.5 rounded-full sm:block"
-                      style={{ backgroundColor: accentColor, boxShadow: `0 0 24px ${accentColor}` }}
-                    />
-                  )}
-                </div>
-              )
-
+              
               if (item.href) {
                 return (
                   <Link
                     key={index}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className={`block ${isOpen ? 'visible' : 'invisible'}`}
+                    className={`block group ${isOpen ? 'visible' : 'invisible'}`}
                   >
-                    {row}
+                    <div className="flex items-center gap-4">
+                      <span className="text-zinc-500 text-sm font-mono w-8">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span
+                        className={`text-3xl md:text-5xl font-bold transition-colors duration-200 ${
+                          isActive
+                            ? 'text-white'
+                            : 'text-zinc-400 group-hover:text-white'
+                        }`}
+                        style={{ 
+                          textShadow: isActive ? `0 0 20px ${accentColor}` : 'none'
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      {isActive && (
+                        <span className="text-white text-sm">●</span>
+                      )}
+                    </div>
                   </Link>
                 )
               }
-
+              
               return (
                 <button
                   key={index}
@@ -201,17 +205,25 @@ export default function StaggeredMenu({
                     item.onClick?.()
                     setIsOpen(false)
                   }}
-                  className={`block w-full text-left ${isOpen ? 'visible' : 'invisible'}`}
+                  className={`block group text-left ${isOpen ? 'visible' : 'invisible'}`}
                 >
-                  {row}
+                  <div className="flex items-center gap-4">
+                    <span className="text-zinc-500 text-sm font-mono w-8">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-3xl md:text-5xl font-bold text-zinc-400 group-hover:text-white transition-colors duration-200">
+                      {item.label}
+                    </span>
+                  </div>
                 </button>
               )
             })}
           </nav>
 
-          <div className={`mt-auto border-t border-white/10 pt-6 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'} transition-opacity delay-300 duration-300`}>
-            <p className="max-w-sm text-sm leading-6 text-zinc-400">
-              A calmer workspace for hours, attendance, and daily review.
+          {/* Footer */}
+          <div className={`mt-12 pt-8 border-t border-zinc-700 ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'} transition-opacity duration-300 delay-500`}>
+            <p className="text-zinc-500 text-sm">
+              © 2025 The Timely
             </p>
           </div>
         </div>

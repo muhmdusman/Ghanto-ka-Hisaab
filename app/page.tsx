@@ -4,7 +4,6 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import { User } from '@supabase/supabase-js'
 import CalendarView from '@/components/CalendarView'
 import Loader from '@/components/Loader'
@@ -588,6 +587,7 @@ function Home() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
+    { label: 'Tracker', href: '/tracker-new' },
     ...(user?.email === 'amusman9705@gmail.com' ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
@@ -595,24 +595,18 @@ function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-[var(--app-surface)]">
+    <div className="min-h-screen bg-white">
       <StaggeredMenu items={menuItems} position="left" />
       
       <main className="p-4 pt-20 md:p-8 md:pt-20">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="grid size-14 place-items-center overflow-hidden rounded-2xl bg-white shadow-[0_12px_30px_rgba(24,24,27,0.12)] ring-1 ring-zinc-200">
-                <Image src="/logo.png" alt="Ghanto ka Hisaab" width={44} height={44} className="size-11 object-contain" priority />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--app-accent)]">Daily hours</p>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950">Ghanto ka Hisaab</h1>
-                <p className="text-sm text-zinc-600 mt-1">
-                  {user?.email}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900">The Timely</h1>
+              <p className="text-sm text-zinc-600 mt-1">
+                {user?.email}
+              </p>
             </div>
             {isOffline && (
               <span className="px-3 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full border border-yellow-300">
@@ -701,7 +695,7 @@ function Home() {
               </p>
             </div>
             <a
-              href="https://github.com/usman2789/Ghanto-ka-Hisaab"
+              href="https://github.com/usman2789/The-Timely"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border-2 border-zinc-900 bg-zinc-900 font-semibold text-white hover:bg-zinc-800 transition-all shadow-[4px_4px_0_0_#323232] whitespace-nowrap"

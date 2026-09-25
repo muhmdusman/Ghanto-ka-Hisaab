@@ -174,6 +174,7 @@ function TrackerPage() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
+    { label: 'Tracker', href: '/tracker' },
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
     { label: 'Sign Out', onClick: handleSignOut }

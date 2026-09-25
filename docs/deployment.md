@@ -1,6 +1,6 @@
 # Cloudflare Deployment Guide
 
-Ghanto ka Hisaab is a Next.js application, so deployment needs an OpenNext conversion step before Wrangler uploads the Worker. Use the npm scripts in this repository instead of calling `wrangler deploy` directly.
+The Timely is a Next.js application, so deployment needs an OpenNext conversion step before Wrangler uploads the Worker. Use the npm scripts in this repository instead of calling `wrangler deploy` directly.
 
 ## Commands
 

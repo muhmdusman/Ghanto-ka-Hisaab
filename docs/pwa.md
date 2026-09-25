@@ -1,6 +1,6 @@
 # PWA Guide
 
-Ghanto ka Hisaab is built as a Progressive Web App so the tracker stays quick to open, installable, and usable even when the network is unreliable.
+The Timely is built as a Progressive Web App so the tracker stays quick to open, installable, and usable even when the network is unreliable.
 
 ## What the PWA adds
 
@@ -34,7 +34,7 @@ PWA behavior is configured in [next.config.ts](../next.config.ts):
 - Styles, scripts, fonts, images, and workers use `StaleWhileRevalidate`
 - Failed document requests fall back to `/_offline`
 
-The app manifest is [public/manifest.json](../public/manifest.json). The current favicon set lives in [public/favicon_io](../public/favicon_io), and the current app logo is [public/logo.png](../public/logo.png).
+The app manifest is [public/manifest.json](../public/manifest.json). The app icons live at the public root, including [public/android-chrome-192x192.png](../public/android-chrome-192x192.png), [public/android-chrome-512x512.png](../public/android-chrome-512x512.png), and the favicon files.
 
 ## Main PWA components
 
@@ -75,7 +75,7 @@ Before deploying PWA changes, verify:
 
 - `npm run build` completes successfully
 - `public/manifest.json` is valid and points to existing icons
-- `public/logo.png` and `public/favicon_io/*` exist
+- app icons and favicon files exist in `public/`
 - `/_offline` renders
 - Chrome DevTools Application tab shows a registered service worker
 - The app loads after toggling DevTools Network to Offline

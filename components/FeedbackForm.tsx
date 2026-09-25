@@ -161,7 +161,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
               This project is open source. Feel free to contribute, report issues, or suggest improvements.
             </p>
             <a
-              href="https://github.com/usman2789/Ghanto-ka-Hisaab"
+              href="https://github.com/usman2789/The-Timely"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-zinc-900 bg-white font-semibold text-zinc-900 hover:bg-zinc-100 transition-all shadow-[4px_4px_0_0_#323232]"
