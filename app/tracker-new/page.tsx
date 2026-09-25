@@ -241,12 +241,11 @@ function TrackerNewPage() {
   if (!user) return null
 
   return (
-    <div className="relative min-h-screen bg-white pb-20">
+    <div className="relative min-h-screen bg-[var(--app-surface)] pb-20">
       <StaggeredMenu
         items={[
           { label: 'Dashboard', href: '/' },
           { label: 'Statistics', href: '/stats' },
-          { label: 'Tracker', href: '/tracker-new' },
           ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
           { label: 'Settings', href: '/settings' },
           { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },

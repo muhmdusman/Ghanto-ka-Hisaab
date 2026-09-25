@@ -65,7 +65,12 @@
   --radius: 0.625rem;
   --font-geist-sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --font-geist-mono: "SFMono-Regular", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --background: oklch(1 0 0);
+  --app-surface: #f6f7f4;
+  --app-panel: #ffffff;
+  --app-ink: #111827;
+  --app-muted: #667085;
+  --app-accent: #0f766e;
+  --background: oklch(0.982 0.006 112.7);
   --foreground: oklch(0.13 0.028 261.692);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);
@@ -136,7 +141,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-variant-numeric: tabular-nums;
+    text-rendering: optimizeLegibility;
+    background:
+      radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 30rem),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(246, 247, 244, 0.96)),
+      var(--app-surface);
+  }
+
+  ::selection {
+    background: rgba(15, 118, 110, 0.18);
+    color: var(--app-ink);
+  }
+
+  button, a, input, textarea, select {
+    -webkit-tap-highlight-color: transparent;
   }
 }
+

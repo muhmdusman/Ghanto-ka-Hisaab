@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 
 function LoginPage() {
   const supabase = createClient()
@@ -16,12 +17,15 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--app-surface)] p-4">
       <div className="w-full max-w-md">
-        <div className="flex flex-col gap-5 rounded-lg border-2 border-zinc-900 bg-zinc-200 p-8 shadow-[4px_4px_0_0_#323232]">
-          <div>
-            <p className="flex flex-col text-2xl font-bold text-zinc-900">
-              Welcome to Tracker
+        <div className="flex flex-col gap-5 rounded-[1.5rem] border border-zinc-200 bg-white/90 p-8 shadow-[0_18px_60px_rgba(24,24,27,0.12)] backdrop-blur">
+          <div className="flex items-center gap-4">
+            <div className="grid size-14 place-items-center overflow-hidden rounded-2xl bg-zinc-950">
+              <Image src="/logo.png" alt="Ghanto ka Hisaab" width={44} height={44} className="size-11 object-contain" priority />
+            </div>
+            <p className="flex flex-col text-2xl font-black tracking-tight text-zinc-950">
+              Ghanto ka Hisaab
               <span className="text-base font-semibold text-zinc-600">
                 Track your hours efficiently
               </span>
@@ -31,7 +35,7 @@ function LoginPage() {
           <button
             type="button"
             onClick={() => handleGoogleAuth(true)}
-            className="relative z-10 flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-lg border-2 border-zinc-900 bg-white px-4 text-base font-semibold text-zinc-900 shadow-[4px_4px_0_0_#323232] transition-all duration-200 before:absolute before:left-0 before:top-0 before:z-[-1] before:h-full before:w-0 before:bg-zinc-900 before:transition-all before:duration-200 hover:text-zinc-50 hover:before:w-full"
+            className="relative z-10 flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border border-zinc-200 bg-white px-4 text-base font-semibold text-zinc-900 shadow-[0_10px_24px_rgba(24,24,27,0.10)] transition-all duration-200 before:absolute before:left-0 before:top-0 before:z-[-1] before:h-full before:w-0 before:bg-zinc-900 before:transition-all before:duration-200 hover:text-zinc-50 hover:before:w-full"
           >
             <svg className="h-6 w-6" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -45,7 +49,7 @@ function LoginPage() {
           <button
             type="button"
             onClick={() => handleGoogleAuth(false)}
-            className="relative z-10 flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-lg border-2 border-zinc-900 bg-white px-4 text-base font-semibold text-zinc-900 shadow-[4px_4px_0_0_#323232] transition-all duration-200 before:absolute before:left-0 before:top-0 before:z-[-1] before:h-full before:w-0 before:bg-zinc-900 before:transition-all before:duration-200 hover:text-zinc-50 hover:before:w-full"
+            className="relative z-10 flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border border-zinc-200 bg-white px-4 text-base font-semibold text-zinc-900 shadow-[0_10px_24px_rgba(24,24,27,0.10)] transition-all duration-200 before:absolute before:left-0 before:top-0 before:z-[-1] before:h-full before:w-0 before:bg-zinc-900 before:transition-all before:duration-200 hover:text-zinc-50 hover:before:w-full"
           >
             <svg className="h-6 w-6" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

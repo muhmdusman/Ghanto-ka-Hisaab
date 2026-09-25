@@ -1,23 +1,25 @@
 {
   "name": "Ghanto ka Hisaab",
-  "short_name": "Tracker",
-  "description": "Track your hours efficiently",
+  "short_name": "Hisaab",
+  "description": "Track hours, review daily activity, and keep attendance moving offline.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#18181b",
+  "background_color": "#f6f7f4",
+  "theme_color": "#111827",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
+      "src": "/favicon_io/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/android-chrome-512x512.png",
+      "src": "/favicon_io/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

@@ -24,21 +24,11 @@ interface HourEntry {
   details: string | null
 }
 
-interface TrackerItemStats {
-  title: string
-  totalDays: number
-  completedDays: number
-  completionRate: number
-}
-
 type TimePeriod = 'today' | 'last7days' | 'last30days' | 'custom' | 'all'
-type ViewMode = 'hours' | 'tracker'
 
 function StatsPage() {
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<ViewMode>('hours')
   const [tagStats, setTagStats] = useState<TagStats[]>([])
-  const [trackerStats, setTrackerStats] = useState<TrackerItemStats[]>([])
   const [totalEntries, setTotalEntries] = useState(0)
   const [daysTracked, setDaysTracked] = useState(0)
   const [avgHoursPerDay, setAvgHoursPerDay] = useState(0)
@@ -53,7 +43,6 @@ function StatsPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Helper to format date in local timezone as YYYY-MM-DD
   const formatLocalDate = (date: Date): string => {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -70,16 +59,18 @@ function StatsPage() {
       case 'today':
         startDate = endDate
         break
-      case 'last7days':
+      case 'last7days': {
         const weekAgo = new Date(today)
         weekAgo.setDate(today.getDate() - 6)
         startDate = formatLocalDate(weekAgo)
         break
-      case 'last30days':
+      }
+      case 'last30days': {
         const monthAgo = new Date(today)
         monthAgo.setDate(today.getDate() - 29)
         startDate = formatLocalDate(monthAgo)
         break
+      }
       case 'custom':
         if (customStartDate && customEndDate) {
           return { startDate: customStartDate, endDate: customEndDate }
@@ -95,7 +86,7 @@ function StatsPage() {
 
   const loadStats = useCallback(async (uid: string, period: TimePeriod) => {
     setIsRefreshing(true)
-    
+
     let query = supabase
       .from('hour_entries')
       .select('*')
@@ -110,25 +101,17 @@ function StatsPage() {
 
     const { data, error } = await query
 
-    console.log('Stats Query Result:', { period, dateRange, data, error })
-
     if (!error && data) {
       setRawEntries(data as HourEntry[])
       setTotalEntries(data.length)
 
       const uniqueDays = new Set(data.map(e => e.date))
       setDaysTracked(uniqueDays.size)
-
-      if (uniqueDays.size > 0) {
-        setAvgHoursPerDay(Math.round((data.length / uniqueDays.size) * 10) / 10)
-      } else {
-        setAvgHoursPerDay(0)
-      }
+      setAvgHoursPerDay(uniqueDays.size > 0 ? Math.round((data.length / uniqueDays.size) * 10) / 10 : 0)
 
       const tagCounts: { [tag: string]: number } = {}
       data.forEach(entry => {
         if (entry.tags && Array.isArray(entry.tags) && entry.tags.length > 0) {
-          // Divide 1 hour by the number of tags
           const fractionalHour = 1 / entry.tags.length
           entry.tags.forEach((tag: string) => {
             tagCounts[tag] = (tagCounts[tag] || 0) + fractionalHour
@@ -160,67 +143,8 @@ function StatsPage() {
       setAvgHoursPerDay(0)
       setTagStats([])
     }
-    
-    // Load tracker stats
-    await loadTrackerStats(uid, period)
-    
-    setIsRefreshing(false)
-  }, [supabase, getDateRange])
 
-  const loadTrackerStats = useCallback(async (uid: string, period: TimePeriod) => {
-    const dateRange = getDateRange(period)
-    
-    // Get all tracker items for user
-    const { data: items, error: itemsError } = await supabase
-      .from('tracker_items')
-      .select('id, title')
-      .eq('user_id', uid)
-    
-    if (itemsError || !items || items.length === 0) {
-      setTrackerStats([])
-      return
-    }
-    
-    // Get entries within date range
-    let entriesQuery = supabase
-      .from('tracker_entries')
-      .select('tracker_item_id, date, status')
-      .eq('user_id', uid)
-    
-    if (dateRange) {
-      entriesQuery = entriesQuery.gte('date', dateRange.startDate).lte('date', dateRange.endDate)
-    }
-    
-    const { data: entries, error: entriesError } = await entriesQuery
-    
-    if (entriesError) {
-      setTrackerStats([])
-      return
-    }
-    
-    // Calculate stats per item
-    const stats: TrackerItemStats[] = items.map(item => {
-      const itemEntries = entries?.filter(entry => entry.tracker_item_id === item.id) || []
-      const completedEntries = itemEntries.filter(entry => entry.status === 'completed')
-      const partialEntries = itemEntries.filter(entry => entry.status === 'partial')
-      
-      // Count unique days
-      const uniqueDays = new Set(itemEntries.map(entry => entry.date))
-      const totalDays = uniqueDays.size
-      // Count completed + half credit for partial
-      const completedDays = completedEntries.length + (partialEntries.length * 0.5)
-      const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0
-      
-      return {
-        title: item.title,
-        totalDays,
-        completedDays: Math.round(completedDays),
-        completionRate
-      }
-    }).filter(stat => stat.totalDays > 0)
-    .sort((a, b) => b.completionRate - a.completionRate)
-    
-    setTrackerStats(stats)
+    setIsRefreshing(false)
   }, [supabase, getDateRange])
 
   useEffect(() => {
@@ -232,11 +156,11 @@ function StatsPage() {
       }
       setUserId(user.id)
       setIsAdmin(user.email === 'amusman9705@gmail.com')
-      
+
       const today = formatLocalDate(new Date())
       setCustomStartDate(today)
       setCustomEndDate(today)
-      
+
       await loadStats(user.id, timePeriod)
       setLoading(false)
     }
@@ -245,17 +169,13 @@ function StatsPage() {
 
   useEffect(() => {
     if (userId && !loading) {
-      if (timePeriod === 'custom' && (!customStartDate || !customEndDate)) {
-        return
-      }
+      if (timePeriod === 'custom' && (!customStartDate || !customEndDate)) return
       loadStats(userId, timePeriod)
     }
   }, [timePeriod, userId, loadStats, loading, customStartDate, customEndDate])
 
   const handleRefresh = async () => {
-    if (userId) {
-      await loadStats(userId, timePeriod)
-    }
+    if (userId) await loadStats(userId, timePeriod)
   }
 
   const handleSignOut = async () => {
@@ -265,7 +185,7 @@ function StatsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--app-surface)]">
         <Loader />
       </div>
     )
@@ -274,7 +194,6 @@ function StatsPage() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
-    { label: 'Tracker', href: '/tracker-new' },
     ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
@@ -297,166 +216,137 @@ function StatsPage() {
 
   const getPeriodDescription = () => {
     const range = getDateRange(timePeriod)
-    if (range) {
-      return `${range.startDate} to ${range.endDate}`
-    }
+    if (range) return `${range.startDate} to ${range.endDate}`
     return 'All recorded data'
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--app-surface)] text-zinc-950">
       <StaggeredMenu items={menuItems} position="left" />
-      
-      <main className="p-4 pt-20 md:p-8 md:pt-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8 flex items-center justify-between">
+
+      <main className="px-4 pb-12 pt-24 md:px-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900">Statistics</h1>
-              <p className="text-sm text-zinc-600 mt-1">
-                Overview of your time tracking data
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--app-accent)]">Time intelligence</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">Statistics</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+                A focused read on logged hours, active days, and where your time actually went.
               </p>
             </div>
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="px-4 py-2 rounded-lg border-2 border-zinc-900 bg-white font-semibold text-zinc-900 hover:bg-zinc-100 transition-all shadow-[2px_2px_0_0_#323232] disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-2xl border border-zinc-900 bg-zinc-950 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(24,24,27,0.18)] transition hover:-translate-y-0.5 hover:bg-zinc-800 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isRefreshing ? '...' : 'Refresh'}
+              {isRefreshing ? 'Refreshing' : 'Refresh'}
             </button>
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="mb-6 flex gap-2">
-            <button
-              onClick={() => setViewMode('hours')}
-              className={`flex-1 px-6 py-3 rounded-lg border-2 border-zinc-900 font-bold transition-all shadow-[2px_2px_0_0_#323232] ${
-                viewMode === 'hours'
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-white text-zinc-900 hover:bg-zinc-100'
-              }`}
-            >
-              Hours Tracking
-            </button>
-            <button
-              onClick={() => setViewMode('tracker')}
-              className={`flex-1 px-6 py-3 rounded-lg border-2 border-zinc-900 font-bold transition-all shadow-[2px_2px_0_0_#323232] ${
-                viewMode === 'tracker'
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-white text-zinc-900 hover:bg-zinc-100'
-              }`}
-            >
-              Tracker Stats
-            </button>
-          </div>
-
-          {viewMode === 'hours' ? (
-            <>
-          <div className="mb-8 p-4 rounded-lg border-2 border-zinc-900 bg-zinc-100">
-            <p className="text-sm font-semibold text-zinc-900 mb-3">Time Period</p>
-            
-            {/* Quick Date Picker */}
-            <div className="mb-4 p-3 bg-white rounded-lg border-2 border-zinc-900">
-              <label className="block text-xs font-semibold text-zinc-700 mb-2">Quick Date Filter</label>
-              <input
-                type="date"
-                onChange={(e) => handleSpecificDateFilter(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border-2 border-zinc-900 bg-white text-zinc-900 font-medium"
-                placeholder="Select a specific date"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-4">
-              {(['today', 'last7days', 'last30days', 'custom', 'all'] as TimePeriod[]).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setTimePeriod(period)}
-                  className={`px-4 py-2 rounded-lg border-2 border-zinc-900 font-semibold transition-all ${
-                    timePeriod === period
-                      ? 'bg-zinc-900 text-white'
-                      : 'bg-white text-zinc-900 hover:bg-zinc-200'
-                  }`}
-                >
-                  {periodLabels[period]}
-                </button>
-              ))}
-            </div>
-            
-            {timePeriod === 'custom' && (
-              <div className="flex flex-wrap gap-4 mt-4 p-4 bg-white rounded-lg border-2 border-zinc-900">
-                <div className="flex-1 min-w-[150px]">
-                  <label className="block text-sm font-semibold text-zinc-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-zinc-900 bg-white text-zinc-900 font-medium"
-                  />
-                </div>
-                <div className="flex-1 min-w-[150px]">
-                  <label className="block text-sm font-semibold text-zinc-700 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-zinc-900 bg-white text-zinc-900 font-medium"
-                  />
-                </div>
+          <section className="mb-6 rounded-[1.5rem] border border-zinc-200 bg-white/85 p-4 shadow-[0_18px_60px_rgba(24,24,27,0.08)] backdrop-blur sm:p-5">
+            <div className="grid gap-4 lg:grid-cols-[220px_1fr] lg:items-start">
+              <div>
+                <p className="text-sm font-bold text-zinc-950">Time period</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">Showing: {getPeriodDescription()}</p>
               </div>
-            )}
-            
-            <p className="text-xs text-zinc-500 mt-2">
-              Showing: {getPeriodDescription()}
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="p-6 rounded-lg border-2 border-zinc-900 bg-zinc-100 shadow-[4px_4px_0_0_#323232]">
-              <p className="text-sm font-semibold text-zinc-600">Total Hours Logged</p>
-              <p className="text-3xl font-bold text-zinc-900 mt-2">{totalEntries}</p>
-              <p className="text-xs text-zinc-500 mt-1">hour entries in database</p>
-            </div>
-            <div className="p-6 rounded-lg border-2 border-zinc-900 bg-zinc-100 shadow-[4px_4px_0_0_#323232]">
-              <p className="text-sm font-semibold text-zinc-600">Days Tracked</p>
-              <p className="text-3xl font-bold text-zinc-900 mt-2">{daysTracked}</p>
-              <p className="text-xs text-zinc-500 mt-1">unique days with entries</p>
-            </div>
-            <div className="p-6 rounded-lg border-2 border-zinc-900 bg-zinc-100 shadow-[4px_4px_0_0_#323232]">
-              <p className="text-sm font-semibold text-zinc-600">Avg Hours/Day</p>
-              <p className="text-3xl font-bold text-zinc-900 mt-2">{avgHoursPerDay}</p>
-              <p className="text-xs text-zinc-500 mt-1">average per tracked day</p>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] mb-8">
-            <h2 className="text-xl font-bold text-zinc-900 mb-4">
-              Activity Distribution - {periodLabels[timePeriod]}
-            </h2>
-            <p className="text-xs text-zinc-600 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="font-semibold">📊 How time is divided:</span> If you add multiple tags to one hour (e.g., 2 PM with [Work, Meeting]), the hour is divided equally. So 1 hour with 2 tags = 30 minutes for each tag.
-            </p>
-            
-            {tagStats.length === 0 ? (
-              <p className="text-zinc-600 text-center py-8">
-                No data for this period. Start tracking your hours to see statistics!
-              </p>
-            ) : (
               <div className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  <label className="block">
+                    <span className="mb-2 block text-xs font-semibold text-zinc-600">Quick date filter</span>
+                    <input
+                      type="date"
+                      onChange={(e) => handleSpecificDateFilter(e.target.value)}
+                      className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-zinc-900 focus:bg-white focus:ring-4 focus:ring-zinc-900/10"
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {(['today', 'last7days', 'last30days', 'custom', 'all'] as TimePeriod[]).map((period) => (
+                      <button
+                        key={period}
+                        onClick={() => setTimePeriod(period)}
+                        className={`rounded-full border px-4 py-2 text-sm font-bold transition active:scale-[0.98] ${
+                          timePeriod === period
+                            ? 'border-zinc-950 bg-zinc-950 text-white shadow-[0_8px_20px_rgba(24,24,27,0.18)]'
+                            : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400 hover:text-zinc-950'
+                        }`}
+                      >
+                        {periodLabels[period]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {timePeriod === 'custom' && (
+                  <div className="grid gap-3 rounded-2xl bg-zinc-50 p-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-2 block text-xs font-semibold text-zinc-600">Start date</span>
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-semibold text-zinc-900 outline-none transition focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/10"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-xs font-semibold text-zinc-600">End date</span>
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-semibold text-zinc-900 outline-none transition focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/10"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[
+              ['Total hours logged', totalEntries, 'hour entries in database'],
+              ['Days tracked', daysTracked, 'unique days with entries'],
+              ['Avg hours/day', avgHoursPerDay, 'average per tracked day']
+            ].map(([label, value, helper]) => (
+              <div key={label} className="rounded-[1.35rem] border border-zinc-200 bg-white p-5 shadow-[0_18px_50px_rgba(24,24,27,0.07)]">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">{label}</p>
+                <p className="mt-3 font-mono text-4xl font-black tracking-tight text-zinc-950">{value}</p>
+                <p className="mt-2 text-xs text-zinc-500">{helper}</p>
+              </div>
+            ))}
+          </section>
+
+          <section className="mb-6 rounded-[1.5rem] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.08)] sm:p-6">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-black tracking-tight text-zinc-950">Activity distribution</h2>
+                <p className="mt-1 text-sm text-zinc-600">{periodLabels[timePeriod]} breakdown by tag.</p>
+              </div>
+              <p className="max-w-md rounded-2xl bg-zinc-50 px-4 py-3 text-xs leading-5 text-zinc-600">
+                Hours with multiple tags are split evenly across each tag, so shared work stays proportionate.
+              </p>
+            </div>
+
+            {tagStats.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-10 text-center">
+                <p className="font-semibold text-zinc-900">No data for this period.</p>
+                <p className="mt-1 text-sm text-zinc-500">Start logging hours to see your time distribution.</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
                 {tagStats.map((stat) => {
-                  const timeDisplay = stat.hours > 0 
-                    ? `${stat.hours}h ${stat.minutes}m`
-                    : `${stat.minutes}m`
-                  
+                  const timeDisplay = stat.hours > 0 ? `${stat.hours}h ${stat.minutes}m` : `${stat.minutes}m`
+
                   return (
                     <div key={stat.tag} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-zinc-900">{stat.tag}</span>
-                        <span className="text-sm text-zinc-600">
-                          {timeDisplay} ({stat.percentage}%)
-                        </span>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-bold text-zinc-950">{stat.tag}</span>
+                        <span className="font-mono text-sm text-zinc-500">{timeDisplay} / {stat.percentage}%</span>
                       </div>
-                      <div className="h-4 bg-zinc-200 rounded-full border-2 border-zinc-900 overflow-hidden">
+                      <div className="h-3 overflow-hidden rounded-full bg-zinc-100">
                         <div
-                          className="h-full bg-zinc-900 transition-all duration-500"
+                          className="h-full rounded-full bg-[var(--app-accent)] transition-all duration-500"
                           style={{ width: `${stat.percentage}%` }}
                         />
                       </div>
@@ -465,67 +355,29 @@ function StatsPage() {
                 })}
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Tracker Stats Section */}
-          {trackerStats.length > 0 && (
-            <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] mb-8">
-              <h2 className="text-xl font-bold text-zinc-900 mb-4">
-                Daily Tracker Stats - {periodLabels[timePeriod]}
-              </h2>
-              <p className="text-xs text-zinc-600 mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <span className="font-semibold">✅ Completion rates:</span> Shows how consistently you've completed your daily tracker items during this period.
-              </p>
-              
-              <div className="space-y-4">
-                {trackerStats.map((stat) => (
-                  <div key={stat.title} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-zinc-900">{stat.title}</span>
-                      <span className="text-sm text-zinc-600">
-                        {stat.completedDays}/{stat.totalDays} days ({stat.completionRate}%)
-                      </span>
-                    </div>
-                    <div className="h-4 bg-zinc-200 rounded-full border-2 border-zinc-900 overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-500 ${
-                          stat.completionRate >= 80 ? 'bg-green-600' :
-                          stat.completionRate >= 50 ? 'bg-yellow-600' :
-                          'bg-red-600'
-                        }`}
-                        style={{ width: `${stat.completionRate}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <section className="rounded-[1.5rem] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.08)] sm:p-6">
+            <h2 className="text-xl font-black tracking-tight text-zinc-950">Recent entries</h2>
+            <p className="mt-1 text-sm text-zinc-600">Showing {rawEntries.length} total entries for the selected period.</p>
 
-          <div className="p-6 rounded-lg border-2 border-zinc-900 bg-zinc-50 shadow-[4px_4px_0_0_#323232]">
-            <h2 className="text-xl font-bold text-zinc-900 mb-4">
-              Recent Entries ({rawEntries.length} total)
-            </h2>
-            
             {rawEntries.length === 0 ? (
-              <p className="text-zinc-600 text-center py-4">
+              <div className="mt-5 rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-8 text-center text-sm text-zinc-500">
                 No entries found for this period.
-              </p>
+              </div>
             ) : (
-              <div className="max-h-60 overflow-y-auto space-y-2">
+              <div className="mt-5 max-h-72 space-y-2 overflow-y-auto pr-1">
                 {rawEntries.slice(0, 20).map((entry) => (
-                  <div 
-                    key={entry.id} 
-                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-zinc-300"
+                  <div
+                    key={entry.id}
+                    className="grid gap-3 rounded-2xl border border-zinc-100 bg-zinc-50 px-4 py-3 sm:grid-cols-[160px_1fr] sm:items-center"
                   >
-                    <div>
-                      <span className="font-semibold text-zinc-900">{entry.date}</span>
-                      <span className="text-zinc-500 mx-2">|</span>
-                      <span className="text-zinc-700">{entry.hour}:00</span>
+                    <div className="font-mono text-sm font-bold text-zinc-900">
+                      {entry.date} <span className="text-zinc-400">/</span> {String(entry.hour).padStart(2, '0')}:00
                     </div>
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex flex-wrap gap-1.5 sm:justify-end">
                       {entry.tags?.map((tag, i) => (
-                        <span key={i} className="px-2 py-1 bg-zinc-200 text-zinc-700 text-xs rounded-full">
+                        <span key={i} className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-200">
                           {tag}
                         </span>
                       ))}
@@ -533,87 +385,15 @@ function StatsPage() {
                   </div>
                 ))}
                 {rawEntries.length > 20 && (
-                  <p className="text-center text-zinc-500 text-sm pt-2">
-                    ... and {rawEntries.length - 20} more entries
-                  </p>
+                  <p className="text-center text-sm text-zinc-500">and {rawEntries.length - 20} more entries</p>
                 )}
               </div>
             )}
-          </div>
-            </>
-          ) : (
-            <>
-              {/* Tracker Stats View */}
-              <div className="space-y-6">
-                {trackerStats.length === 0 ? (
-                  <div className="p-8 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] text-center">
-                    <p className="text-zinc-600 mb-4">No tracker data yet.</p>
-                    <a 
-                      href="/tracker-new" 
-                      className="inline-block px-6 py-3 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 transition-colors"
-                    >
-                      Start Tracking
-                    </a>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232]">
-                        <p className="text-sm font-semibold text-zinc-600">Total Items</p>
-                        <p className="text-3xl font-bold text-zinc-900 mt-2">{trackerStats.length}</p>
-                      </div>
-                      <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232]">
-                        <p className="text-sm font-semibold text-zinc-600">Avg Completion</p>
-                        <p className="text-3xl font-bold text-zinc-900 mt-2">
-                          {trackerStats.length > 0 
-                            ? Math.round(trackerStats.reduce((sum, s) => sum + s.completionRate, 0) / trackerStats.length)
-                            : 0}%
-                        </p>
-                      </div>
-                      <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232]">
-                        <p className="text-sm font-semibold text-zinc-600">Total Days Tracked</p>
-                        <p className="text-3xl font-bold text-zinc-900 mt-2">
-                          {Math.max(...trackerStats.map(s => s.totalDays), 0)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-6 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232]">
-                      <h2 className="text-xl font-bold text-zinc-900 mb-6">Tracker Item Performance</h2>
-                      <div className="space-y-4">
-                        {trackerStats.map((stat) => (
-                          <div key={stat.title} className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-zinc-900">{stat.title}</span>
-                              <span className="text-sm text-zinc-600">
-                                {stat.completedDays}/{stat.totalDays} days ({stat.completionRate}%)
-                              </span>
-                            </div>
-                            <div className="h-4 bg-zinc-200 rounded-full border-2 border-zinc-900 overflow-hidden">
-                              <div
-                                className={`h-full transition-all duration-500 ${
-                                  stat.completionRate >= 80 ? 'bg-green-600' :
-                                  stat.completionRate >= 50 ? 'bg-yellow-600' :
-                                  'bg-red-600'
-                                }`}
-                                style={{ width: `${stat.completionRate}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </>
-          )}
+          </section>
         </div>
       </main>
 
-      {showFeedbackForm && (
-        <FeedbackForm onClose={() => setShowFeedbackForm(false)} />
-      )}
+      {showFeedbackForm && <FeedbackForm onClose={() => setShowFeedbackForm(false)} />}
     </div>
   )
 }
