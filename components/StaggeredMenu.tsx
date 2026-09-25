@@ -111,7 +111,7 @@ export default function StaggeredMenu({
       <button
         ref={buttonRef}
         onClick={toggleMenu}
-        className="absolute top-4 left-4 z-[60] p-3 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] hover:shadow-[2px_2px_0_0_#323232] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+        className="fixed top-4 left-4 z-[9999] p-3 rounded-lg border-2 border-zinc-900 bg-white shadow-[4px_4px_0_0_#323232] hover:shadow-[2px_2px_0_0_#323232] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
         aria-label="Toggle menu"
       >
         <div className="w-6 h-5 flex flex-col justify-between">
@@ -136,7 +136,7 @@ export default function StaggeredMenu({
       {/* Menu Panel */}
       <div 
         ref={menuRef} 
-        className={`fixed inset-0 z-50 ${isOpen ? 'pointer-events-auto visible' : 'pointer-events-none invisible'}`}
+        className={`fixed inset-0 z-[9998] ${isOpen ? 'pointer-events-auto visible' : 'pointer-events-none invisible'}`}
         style={{ display: isOpen ? 'block' : 'none' }}
       >
         {/* Staggered Overlay Layers */}
@@ -149,7 +149,7 @@ export default function StaggeredMenu({
             className={`absolute inset-0 ${position === 'right' ? 'translate-x-full' : '-translate-x-full'}`}
             style={{
               backgroundColor: color,
-              zIndex: 50 + index,
+              zIndex: 9990 + index,
               willChange: 'transform'
             }}
           />
@@ -160,7 +160,7 @@ export default function StaggeredMenu({
           className={`absolute inset-0 flex flex-col justify-center px-8 md:px-16 ${
             isOpen ? 'pointer-events-auto visible' : 'pointer-events-none invisible'
           }`}
-          style={{ zIndex: 50 + colors.length }}
+          style={{ zIndex: 9990 + colors.length }}
         >
           <nav ref={menuItemsRef} className="space-y-2">
             {items.map((item, index) => {
