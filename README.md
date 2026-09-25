@@ -1,11 +1,11 @@
 # Ghanto ka Hisaab
 
 <p align="center">
-  <img src="public/android-chrome-192x192.png" alt="Ghanto ka Hisaab app icon" width="96" height="96" />
+  <img src="public/logo.png" alt="Ghanto ka Hisaab logo" width="96" height="96" />
 </p>
 
 <p align="center">
-  <strong>A Next.js + Supabase PWA for tracking hours, habits, attendance, and offline daily progress.</strong>
+  <strong>Know where your hours actually go.</strong>
 </p>
 
 <p align="center">
@@ -16,25 +16,50 @@
   <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Auth%20%2B%20Postgres-3ECF8E?style=for-the-badge&logo=supabase&logoColor=073b2f" />
   <img alt="Cloudflare Workers" src="https://img.shields.io/badge/Cloudflare_Workers-OpenNext-F38020?style=for-the-badge&logo=cloudflareworkers&logoColor=white" />
   <img alt="PWA" src="https://img.shields.io/badge/PWA-offline_ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-111827?style=for-the-badge" />
 </p>
 
-## Overview
+## Why this exists
 
-Ghanto ka Hisaab helps track how time is spent across the day, with offline-first behavior for unreliable networks and multiple views for daily review. It combines an hour-by-hour dashboard, habit tracking, stats, and an admin attendance helper in one App Router project.
+It is easy to lose time without noticing it. Sometimes an hour disappears while sitting idle, scrolling, or hanging out with friends longer than planned. By the end of the day, it can be hard to remember where the time went.
 
-## Features
+Ghanto ka Hisaab solves that by making each hour visible. You log the day hour by hour, attach predefined or custom tags, add notes when needed, and then review the statistics to see where your time is productive, necessary, idle, or wasted.
 
-- Hour-by-hour tracking with notes, tags, and calendar navigation
-- Daily tracker at `/tracker-new` for user-defined habits and tasks
-- Statistics dashboard at `/stats` for hours and tracker progress
+The goal is not guilt. The goal is awareness: track your hours, understand your patterns, and get more out of your time.
+
+## How it works
+
+1. Open the dashboard and pick the day/hour you want to log.
+2. Choose from predefined tags or add new tags for your own routines.
+3. Add optional details for context.
+4. Review statistics to see where your hours are going.
+5. Use the pattern to reduce time waste and protect better parts of your day.
+
+## Current features
+
+- Hour-wise tracking for every day
+- Predefined task/tag support
+- Custom tag creation
+- Optional notes/details on hour entries
+- Calendar-based daily review
+- Statistics for logged hours, active days, averages, and tag distribution
+- Supabase authentication and user-scoped records
+- Offline-first support with IndexedDB-backed local data handling
+- Installable PWA experience with custom install prompt
 - Admin attendance helper at `/attendance`
-- Supabase authentication and user-scoped data
-- Offline queueing and IndexedDB-backed cached entries
-- PWA install prompt, service worker lifecycle handling, and offline fallback route
 - Cloudflare Workers deployment through OpenNext
-- Graphify output for codebase exploration in `graphify-out/`
 
-## Tech Stack
+## Future roadmap
+
+- AI review model for weekly hour records
+- Recommendations for where time is being wasted
+- Suggestions for opportunities to avoid idle time
+- Smarter summaries of recurring patterns
+- More actionable weekly productivity insights
+
+Example future flow: the AI model reads the last week's hour logs, detects repeated idle blocks or low-value patterns, and recommends practical ways to avoid the same time waste next week.
+
+## Tech stack
 
 | Area | Technology |
 | --- | --- |
@@ -45,20 +70,19 @@ Ghanto ka Hisaab helps track how time is spent across the day, with offline-firs
 | Deployment | OpenNext for Cloudflare Workers, Wrangler |
 | Tooling | ESLint, npm, Graphify reports |
 
-## App Routes
+## App routes
 
 | Route | Purpose |
 | --- | --- |
 | `/` | Main hour-tracking dashboard with calendar, tags, notes, and sync support |
-| `/tracker-new` | Daily tracker for user-defined items and completion status |
-| `/stats` | Analytics for tracked hours and tracker entries |
+| `/stats` | Analytics for tracked hours and tag distribution |
 | `/settings` | Sign-out, sync visibility, and local pending-data cleanup |
 | `/attendance` | Admin-only attendance helper |
 | `/login`, `/signup` | Auth entry points |
 | `/auth/callback` | Supabase OAuth callback route |
 | `/_offline` | Offline fallback page served by the PWA setup |
 
-## Local Development
+## Local development
 
 ### Prerequisites
 
@@ -83,7 +107,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 For Cloudflare/OpenNext local preview, `.dev.vars` is used for Worker-specific development variables.
 
-### Run Locally
+### Run locally
 
 ```bash
 npm run dev
@@ -100,7 +124,7 @@ npm start
 
 PWA behavior is only fully active in production builds.
 
-## Cloudflare Deployment
+## Cloudflare deployment
 
 The app deploys to Cloudflare Workers through OpenNext. Use the project scripts rather than raw `wrangler deploy` for this Next.js app:
 
@@ -116,50 +140,39 @@ Recommended Cloudflare Workers Builds settings:
 | Deploy command | `npm run deploy` |
 | Preview command | `npm run preview` |
 
-See [docs/deployment.md](docs/deployment.md) for more details.
+See [docs/deployment.md](docs/deployment.md) for details.
 
-## Offline and PWA Behavior
+## Offline and PWA behavior
 
-PWA behavior is configured in [next.config.ts](next.config.ts):
+PWA behavior is configured in [next.config.ts](next.config.ts). The unified guide is now in [docs/pwa.md](docs/pwa.md).
 
-- Production builds generate `public/sw.js`
-- Document requests use `NetworkFirst`
-- `/_next/static/*` assets use `CacheFirst`
-- Styles, scripts, fonts, images, and workers use `StaleWhileRevalidate`
-- Failed document navigations fall back to `/_offline`
-
-Offline data is handled separately from the service worker. Pending and cached user data is stored through [utils/offlineSync.ts](utils/offlineSync.ts), which lets tracking continue while the network is unavailable.
-
-PWA helper components:
+Important pieces:
 
 - [components/PWALifecycleManager.tsx](components/PWALifecycleManager.tsx)
 - [components/PWAInstallPrompt.tsx](components/PWAInstallPrompt.tsx)
 - [components/PWADebugger.tsx](components/PWADebugger.tsx)
+- [utils/offlineSync.ts](utils/offlineSync.ts)
+- [app/_offline/page.tsx](app/_offline/page.tsx)
 
 ## Database
 
 Supabase is used for browser auth/session handling and user-scoped records.
 
-Schema files:
+Database schema is managed in Supabase using the project SQL scripts used during setup. Keep those scripts aligned with the active tables before deploying a fresh database.
 
-- [supabase-schema.sql](supabase-schema.sql)
-- [supabase-tracker-schema.sql](supabase-tracker-schema.sql)
-
-Note: the app has used both `tracker_entries` and `tracker_logs` naming in tracker-related code/schema over time. Review the active tracker schema before setting up a fresh database.
-
-## Project Structure
+## Project structure
 
 ```text
 app/                 App Router pages and routes
 components/          Shared UI and PWA components
 utils/               Offline sync and Supabase utilities
 lib/                 Shared helpers
-public/              Icons, manifest, service worker artifacts
+public/              Logo, favicons, manifest, service-worker artifacts
+docs/                Deployment and PWA documentation
 graphify-out/        Generated codebase graph and report
-docs/                Deployment and maintenance notes
 ```
 
-## Graphify Notes
+## Graphify notes
 
 This repo includes a Graphify knowledge graph at `graphify-out/`:
 
@@ -173,13 +186,11 @@ If `graphify` is installed, refresh the graph after code changes with:
 graphify update .
 ```
 
-## Related Docs
+## Docs
 
-- [PWA_DOCUMENTATION.md](PWA_DOCUMENTATION.md)
-- [PWA_SIMPLE_GUIDE.md](PWA_SIMPLE_GUIDE.md)
-- [TRACKER_FEATURE_SUMMARY.md](TRACKER_FEATURE_SUMMARY.md)
 - [docs/deployment.md](docs/deployment.md)
+- [docs/pwa.md](docs/pwa.md)
 
 ## License
 
-See [LICENSE](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
