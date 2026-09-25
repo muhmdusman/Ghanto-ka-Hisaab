@@ -165,7 +165,7 @@ function SettingsPage() {
               </p>
               
               <a
-                href="https://github.com/usman2789/The-Timely"
+                href="https://github.com/muhmdusman/timely"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-900 hover:text-zinc-700 mt-4"

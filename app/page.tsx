@@ -695,7 +695,7 @@ function Home() {
               </p>
             </div>
             <a
-              href="https://github.com/usman2789/The-Timely"
+              href="https://github.com/muhmdusman/timely"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border-2 border-zinc-900 bg-zinc-900 font-semibold text-white hover:bg-zinc-800 transition-all shadow-[4px_4px_0_0_#323232] whitespace-nowrap"
