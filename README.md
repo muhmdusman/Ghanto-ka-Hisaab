@@ -1,7 +1,7 @@
 # The Timely
 
 <p align="center">
-  <img src="public/android-chrome-192x192.png" alt="The Timely app icon" width="96" height="96" />
+  <img src="public/header-logo.png" alt="The Timely logo" width="250" height="100" />
 </p>
 
 <p align="center">
@@ -167,7 +167,7 @@ app/                 App Router pages and routes
 components/          Shared UI and PWA components
 utils/               Offline sync and Supabase utilities
 lib/                 Shared helpers
-public/              Logo, favicons, manifest, service-worker artifacts
+public/              Header logo, favicon set, manifest, service-worker artifacts
 docs/                Deployment and PWA documentation
 graphify-out/        Generated codebase graph and report
 ```

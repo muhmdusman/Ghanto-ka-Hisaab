@@ -34,7 +34,7 @@ PWA behavior is configured in [next.config.ts](../next.config.ts):
 - Styles, scripts, fonts, images, and workers use `StaleWhileRevalidate`
 - Failed document requests fall back to `/_offline`
 
-The app manifest is [public/manifest.json](../public/manifest.json). The app icons live at the public root, including [public/android-chrome-192x192.png](../public/android-chrome-192x192.png), [public/android-chrome-512x512.png](../public/android-chrome-512x512.png), and the favicon files.
+The app manifest is [public/manifest.json](../public/manifest.json). The favicon and install icon set lives in [public/favicon_io](../public/favicon_io), and the header logo is [public/header-logo.png](../public/header-logo.png).
 
 ## Main PWA components
 
@@ -75,7 +75,7 @@ Before deploying PWA changes, verify:
 
 - `npm run build` completes successfully
 - `public/manifest.json` is valid and points to existing icons
-- app icons and favicon files exist in `public/`
+- `public/header-logo.png` exists and favicon files exist in `public/favicon_io/`
 - `/_offline` renders
 - Chrome DevTools Application tab shows a registered service worker
 - The app loads after toggling DevTools Network to Offline
