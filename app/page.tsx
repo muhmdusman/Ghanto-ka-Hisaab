@@ -587,7 +587,6 @@ function Home() {
   const menuItems = [
     { label: 'Dashboard', href: '/' },
     { label: 'Statistics', href: '/stats' },
-    { label: 'Tracker', href: '/tracker-new' },
     ...(user?.email === 'amusman9705@gmail.com' ? [{ label: 'Attendance', href: '/attendance' }] : []),
     { label: 'Settings', href: '/settings' },
     { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
@@ -651,15 +650,15 @@ function Home() {
               <span className="font-medium">No entries</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded border-2 border-zinc-900 bg-red-200"></div>
+              <div className="w-6 h-6 rounded border-2 border-zinc-900 bg-sky-100"></div>
               <span className="font-medium">1-7 hours</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded border-2 border-zinc-900 bg-yellow-200"></div>
+              <div className="w-6 h-6 rounded border-2 border-zinc-900 bg-amber-100"></div>
               <span className="font-medium">8-15 hours</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded border-2 border-zinc-900 bg-green-200"></div>
+              <div className="w-6 h-6 rounded border-2 border-zinc-900 bg-emerald-100"></div>
               <span className="font-medium">16-24 hours</span>
             </div>
           </div>

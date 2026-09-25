@@ -26,9 +26,9 @@ export default function CalendarView({ year, month, entries, onDateClick }: Cale
 
   const getProgressColor = (count: number) => {
     if (count === 0) return 'bg-white'
-    if (count < 8) return 'bg-red-200'
-    if (count < 16) return 'bg-yellow-200'
-    return 'bg-green-200'
+    if (count < 8) return 'bg-sky-100'
+    if (count < 16) return 'bg-amber-100'
+    return 'bg-emerald-100'
   }
 
   return (
@@ -60,8 +60,8 @@ export default function CalendarView({ year, month, entries, onDateClick }: Cale
             <button
               key={day}
               onClick={() => onDateClick(new Date(year, month, day))}
-              className={`aspect-square rounded-lg border-2 border-zinc-900 p-1 sm:p-2 font-bold transition-all hover:scale-105 ${getProgressColor(count)} ${
-                isToday ? 'ring-2 ring-blue-500' : ''
+              className={`aspect-square rounded-lg border-2 border-zinc-900 p-1 sm:p-2 font-bold transition-all hover:-translate-y-0.5 hover:border-teal-800 hover:shadow-[2px_2px_0_0_#0f766e] ${getProgressColor(count)} ${
+                isToday ? 'ring-2 ring-teal-500 ring-offset-2' : ''
               }`}
             >
               <div className="flex flex-col items-center justify-center h-full gap-0.5">

@@ -246,7 +246,6 @@ function TrackerNewPage() {
         items={[
           { label: 'Dashboard', href: '/' },
           { label: 'Statistics', href: '/stats' },
-          { label: 'Tracker', href: '/tracker-new' },
           ...(isAdmin ? [{ label: 'Attendance', href: '/attendance' }] : []),
           { label: 'Settings', href: '/settings' },
           { label: 'Feedback', onClick: () => setShowFeedbackForm(true) },
